@@ -1,0 +1,38 @@
+# Source and config — published via `dist` only (see package.json "files")
+src/
+test/
+*.ts
+tsconfig*.json
+vitest.config.ts
+
+# Git and dependency artifacts
+.git/
+.gitignore
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Logs
+logs/
+*.log
