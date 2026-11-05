@@ -1,0 +1,30 @@
+name: AI Summary
+
+on:
+    push:
+        branches: [main, master]
+    pull_request:
+        branches: [main, master]
+
+jobs:
+    summarize:
+        name: Generate AI Summary
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Gather changed files
+              id: changed-files
+              run: |
+                  if [ "${{ github.event_name }}" = "pull_request" ]; then
+                      echo "files=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})" >> $GITHUB_OUTPUT
+                  else
+                      echo "files=$(git diff --name-only HEAD~1 HEAD)" >> $GITHUB_OUTPUT
+                  fi
+
+            - name: Report summary
+              run: |
+                  echo "Changed files for ${{ github.event_name }}:"
+                  echo "${{ steps.changed-files.outputs.files }}"

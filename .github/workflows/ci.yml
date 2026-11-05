@@ -1,0 +1,117 @@
+name: CI
+
+on:
+    push:
+        branches: [main, master]
+    pull_request:
+        branches: [main, master]
+
+env:
+    NODE_VERSION: "20"
+
+jobs:
+    lint-and-typecheck:
+        name: Lint & Typecheck
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+                  cache: "npm"
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Typecheck source
+              run: npm run typecheck:src
+
+    build:
+        name: Build
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        needs: lint-and-typecheck
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+                  cache: "npm"
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Build package
+              run: npm run build
+
+            - name: Verify dist output exists
+              run: |
+                  test -f dist/index.js
+                  test -f dist/index.d.ts
+
+    test:
+        name: Test
+        runs-on: ubuntu-latest
+        timeout-minutes: 15
+        needs: lint-and-typecheck
+        strategy:
+            matrix:
+                node: ["lts/*", "20", "22", "24"]
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ matrix.node }}
+                  cache: "npm"
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Build package
+              run: npm run build
+
+            - name: Run test suite
+              run: npm test
+
+    pack-check:
+        name: Pack Check
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        needs: [build, test]
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+                  cache: "npm"
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Build package
+              run: npm run build
+
+            - name: Verify package contents
+              run: npm run pack:check
+
+    ci:
+        name: CI Pipeline
+        runs-on: ubuntu-latest
+        timeout-minutes: 20
+        needs: [lint-and-typecheck, build, test, pack-check]
+        steps:
+            - name: Report CI status
+              run: echo "All CI stages passed"

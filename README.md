@@ -2,6 +2,10 @@
 
 High-performance, secure-by-default structured logging built on [Pino](https://getpino.io). Includes Fastify and HTTP integration, automatic deep redaction, URL sanitization, serializer utilities, and transport builders with lifecycle management.
 
+[![CI](https://github.com/mayank040902/framework/actions/workflows/auth.yml/badge.svg)](https://github.com/mayank040902/framework/actions/workflows/auth.yml)
+[![npm](https://img.shields.io/npm/v/@oneunit/auth.svg)](https://www.npmjs.com/package/@oneunit/auth)
+[![license](https://img.shields.io/npm/l/@oneunit/auth.svg)](./LICENSE)
+
 ---
 
 ## What problem does it solve?
@@ -63,7 +67,7 @@ See `ARCHITECTURE.md` for the full technical architecture, design decisions, and
 
 ## Supported versions
 
-- **Node.js:** `>=20` (per `engines` in `package.json`)
+- **Node.js:** `20` to latest (all actively supported LTS and current releases)
 - **TypeScript:** `^5.9.x`
 - **Pino:** `^10.4.0` (runtime dependency)
 - **pino-http:** `^11.0.0` (runtime dependency)

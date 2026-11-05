@@ -1,0 +1,76 @@
+name: Security
+
+on:
+    push:
+        branches: [main, master]
+    pull_request:
+        branches: [main, master]
+    schedule:
+        - cron: "0 6 * * 1"
+
+env:
+    NODE_VERSION: "20"
+
+jobs:
+    dependency-audit:
+        name: Dependency Audit
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        strategy:
+            matrix:
+                node: ["lts/*", "20", "22", "24"]
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ matrix.node }}
+                  cache: "npm"
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Run npm audit
+              run: npm audit --audit-level=high
+
+    security-tests:
+        name: Security Test Suite
+        runs-on: ubuntu-latest
+        timeout-minutes: 15
+        strategy:
+            matrix:
+                node: ["lts/*", "20", "22", "24"]
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ matrix.node }}
+                  cache: "npm"
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Build package
+              run: npm run build
+
+            - name: Run security tests
+              run: npm run test:security
+
+    secret-scan:
+        name: Secret Scan
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Scan for secrets
+              uses: trufflesecurity/trufflehog@v3
+              with:
+                  path: ./
+                  only_verified: false
