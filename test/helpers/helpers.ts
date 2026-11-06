@@ -21,6 +21,8 @@ export const REDACTED = "[REDACTED]";
 
 export interface Captured {
     logger: pino.Logger;
+    /** Writable stream collecting emitted lines. */
+    stream: NodeJS.WritableStream;
     /** Parsed JSON lines. */
     records: Array<Record<string, any>>;
     /** Raw lines exactly as emitted, for substring assertions. */
@@ -63,7 +65,7 @@ export function capture(options?: Partial<LoggerOptions>): Captured {
         destination: stream,
     });
 
-    return { logger, records, lines };
+    return { logger, records, lines, stream };
 }
 
 /** Asserts that none of `secrets` appears anywhere in the captured output. */

@@ -1,4 +1,4 @@
-import type { LoggerMode, RedactionConfig } from "./types.js";
+import type { LoggerMode, LoggerOptions, RedactionConfig } from "./types.js";
 import { validateConfigOrThrow } from "./config-validation.js";
 
 /**
@@ -113,7 +113,7 @@ export function resolvePreset(
         redaction?: RedactionConfig | undefined;
         destination?: NodeJS.WritableStream;
     } = {},
-): Parameters<typeof import("./logger/logger.js").createLogger>[0] {
+): LoggerOptions {
     const base = presets[presetName]({
         service: options.service,
         version: options.version,
@@ -131,7 +131,7 @@ export function resolvePreset(
         redaction: config.redaction as RedactionConfig | undefined,
     });
 
-    return config as Parameters<typeof import("./logger/logger.js").createLogger>[0];
+    return config as LoggerOptions;
 }
 
 /**

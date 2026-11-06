@@ -31,14 +31,14 @@ describe("production preset (TC-058)", () => {
         const logger = createLogger({
             mode: "production",
             destination: stream,
-            redaction: presets.production().redaction,
+            redaction: presets.production().redaction!,
         });
 
         logger.info({ message: "started" }, "started");
 
-        expect(records[0].level).toBe("info");
-        expect(records[0].message).toBe("started");
-        expect(records[0].msg).toBe("started");
+        expect(records[0]!.level).toBe("info");
+        expect(records[0]!.message).toBe("started");
+        expect(records[0]!.msg).toBe("started");
     });
 });
 
@@ -60,12 +60,12 @@ describe("development preset (TC-059)", () => {
             mode: "development",
             pino: { level: "trace" },
             destination: stream,
-            redaction: presets.development().redaction,
+            redaction: presets.development().redaction!,
         });
 
         logger.trace({ password: "DEV_SECRET" }, "dev");
 
-        expect(records[0].password).toBe("[REDACTED]");
+        expect(records[0]!.password).toBe("[REDACTED]");
     });
 });
 
@@ -86,7 +86,7 @@ describe("test preset (TC-060)", () => {
         const logger = createLogger({
             mode: "test",
             destination: stream,
-            redaction: presets.test().redaction,
+            redaction: presets.test().redaction!,
         });
 
         logger.info({ password: "TEST_SECRET" }, "test");

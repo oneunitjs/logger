@@ -98,6 +98,7 @@ export interface LogContext {
 /** Configuration options for `createLogger`. */
 export interface LoggerOptions {
     mode?: LoggerMode;
+    level?: string;
     context?: LogContext;
     serializers?: SerializerOptions;
     redaction?: RedactionConfig;
