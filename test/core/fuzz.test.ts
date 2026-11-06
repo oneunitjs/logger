@@ -131,13 +131,14 @@ describe("fuzz: redaction never leaks secrets", () => {
 
         logger.info({ payload: obj }, "preserve structure");
 
-        expect(records[0].payload.user.name).toBe("alice");
-        expect(records[0].payload.user.password).toBe(REDACTED);
-        expect(records[0].payload.items[0].id).toBe(1);
-        expect(records[0].payload.items[0].token).toBe(REDACTED);
-        expect(records[0].payload.items[1].name).toBe("bob");
-        expect(records[0].payload.metadata.version).toBe("1.0");
-        expect(records[0].payload.metadata.secret).toBe(REDACTED);
+        expect(records).toHaveLength(1);
+        expect(records[0]!.payload.user.name).toBe("alice");
+        expect(records[0]!.payload.user.password).toBe(REDACTED);
+        expect(records[0]!.payload.items[0].id).toBe(1);
+        expect(records[0]!.payload.items[0].token).toBe(REDACTED);
+        expect(records[0]!.payload.items[1].name).toBe("bob");
+        expect(records[0]!.payload.metadata.version).toBe("1.0");
+        expect(records[0]!.payload.metadata.secret).toBe(REDACTED);
     });
 
     it("does not leak secrets through casing variations", () => {

@@ -59,8 +59,9 @@ describe("public API", () => {
         const logger = loggerPackage.createLogger({ mode: "production", destination: stream });
         logger.info({ hello: "world" }, "root import");
 
-        expect(records[0].msg).toBe("root import");
-        expect(records[0].hello).toBe("world");
+        expect(records).toHaveLength(1);
+        expect(records[0]!.msg).toBe("root import");
+        expect(records[0]!.hello).toBe("world");
     });
 
     it("keeps pino's logger interface on the returned instance", () => {
@@ -81,8 +82,8 @@ describe("public API", () => {
 
         // Explicit destination routes output to the stream.
         loggerPackage.createLogger({ destination: stream }).info({ routed: true }, "routed");
-        expect(records[0].msg).toBe("routed");
         expect(records).toHaveLength(1);
+        expect(records[0]!.msg).toBe("routed");
 
         // Omitting it must not throw; pino writes to fd 1 by default.
         expect(() => loggerPackage.createLogger({ mode: "production" })).not.toThrow();
@@ -111,7 +112,8 @@ describe("public API", () => {
 
         logger.info({ password: "s3cret" }, "custom message key");
 
-        expect(records[0].message).toBe("custom message key");
-        expect(records[0].password).toBe("[REDACTED]");
+        expect(records).toHaveLength(1);
+        expect(records[0]!.message).toBe("custom message key");
+        expect(records[0]!.password).toBe("[REDACTED]");
     });
 });
