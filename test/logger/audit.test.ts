@@ -5,6 +5,7 @@ import { createLogger } from "../../src/logger/logger.js";
 import { defineConfig } from "../../src/logger/config.js";
 import { collector } from "../helpers/helpers.js";
 import { presets } from "../../src/presets.js";
+import type { LoggerOptions } from "../../src/types.js";
 
 /**
  * Audit mode (TC-034, TC-035, TC-036).
@@ -42,7 +43,7 @@ describe("audit event creation (TC-034)", () => {
 
         logger.info({ password: "SECRET_PASSWORD" }, "audited");
 
-        expect(records[0].password).toBe("[REDACTED]");
+        expect(records[0]!.password).toBe("[REDACTED]");
         expect(events.length).toBeGreaterThan(0);
 
         const redactionEvent = events.find((e) => e.event === "redaction");
@@ -94,7 +95,7 @@ describe("audit event creation (TC-034)", () => {
         const bindingEvent = events.find((e) => e.event === "redaction" && e.isBinding === true);
         expect(bindingEvent).toBeDefined();
         expect(bindingEvent!.key).toBe("apiKey");
-        expect(records[0].apiKey).toBe("[REDACTED]");
+        expect(records[0]!.apiKey).toBe("[REDACTED]");
     });
 });
 
@@ -123,8 +124,8 @@ describe("audit secret protection (TC-035)", () => {
 
         const allAuditText = JSON.stringify(events);
         expect(allAuditText).not.toContain(secret);
-        expect(records[0].password).toBe("[REDACTED]");
-        expect(records[0].apiKey).toBe(`hash(${secret.length})`);
+        expect(records[0]!.password).toBe("[REDACTED]");
+        expect(records[0]!.apiKey).toBe(`hash(${secret.length})`);
     });
 
     it("handles audit sink errors without aborting the log call", () => {
@@ -144,7 +145,7 @@ describe("audit secret protection (TC-035)", () => {
         });
 
         expect(() => logger.info({ password: "SECRET" }, "sink error")).not.toThrow();
-        expect(records[0].password).toBe("[REDACTED]");
+        expect(records[0]!.password).toBe("[REDACTED]");
     });
 });
 
@@ -161,7 +162,7 @@ describe("CI audit preset (TC-036)", () => {
 
         // defineConfig is what adds the redacting `redact` path list and
         // formatter; redaction remains active in CI.
-        const resolved = defineConfig(config);
+        const resolved = defineConfig(config as LoggerOptions);
         expect(resolved.level).toBe("silent");
         expect(resolved.redact).toBeDefined();
     });
@@ -192,7 +193,7 @@ describe("CI audit preset (TC-036)", () => {
         logger.info({ password: "SECRET_CI" }, "ci");
 
         expect(records.length).toBe(1);
-        expect(records[0].password).toBe("[REDACTED]");
+        expect(records[0]!.password).toBe("[REDACTED]");
         expect(JSON.stringify(records)).not.toContain("SECRET_CI");
         expect(auditEvents.length).toBeGreaterThan(0);
     });

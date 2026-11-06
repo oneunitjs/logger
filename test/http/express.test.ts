@@ -134,7 +134,7 @@ describe("Express integration: createHttpLogger middleware", () => {
         await withServer(server, async (port) => {
             await hit(port, "/hello");
 
-            const stamp = records[0].time;
+            const stamp = records[0]!.time;
             expect(typeof stamp, "no time field").toBe("string");
             expect(stamp, `not ISO-8601: ${stamp}`).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
         });

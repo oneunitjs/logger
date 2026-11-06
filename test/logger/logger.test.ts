@@ -67,7 +67,7 @@ describe("logger", () => {
     it("should preserve child bindings in emitted output", () => {
         const { logger, records } = createCapturingLogger();
         logger.child({ requestId: "abc-123" }).info("hi");
-        expect(records()[0].requestId).toBe("abc-123");
+        expect(records()![0]!.requestId).toBe("abc-123");
     });
 
     it("should apply explicit pino overrides", () => {
@@ -76,7 +76,7 @@ describe("logger", () => {
         logger.warn("kept");
         const out = records();
         expect(out).toHaveLength(1);
-        expect(out[0].msg).toBe("kept");
+        expect(out[0]!.msg).toBe("kept");
     });
 
     it("should not throw when creating a child with no bindings", () => {
@@ -193,7 +193,7 @@ describe("defineConfig", () => {
         const records = captureWithConfig(defineConfig({ mode: "production" }), {
             res: { headers: { "set-cookie": "sid=SECRET" } },
         });
-        expect(records[0].res.headers["set-cookie"]).toBe("[REDACTED]");
+        expect(records[0]!.res.headers["set-cookie"]).toBe("[REDACTED]");
     });
 
     it("should not throw when a payload getter throws", () => {
@@ -443,12 +443,12 @@ describe("defineConfig", () => {
             apiKey: "k",
         });
 
-        expect(records[0].password).toBe("[REDACTED]");
-        expect(records[0].token).toBe("[REDACTED]");
-        expect(records[0].secret).toBe("[REDACTED]");
-        expect(records[0].accessToken).toBe("[REDACTED]");
-        expect(records[0].refreshToken).toBe("[REDACTED]");
-        expect(records[0].apiKey).toBe("[REDACTED]");
+        expect(records[0]!.password).toBe("[REDACTED]");
+        expect(records[0]!.token).toBe("[REDACTED]");
+        expect(records[0]!.secret).toBe("[REDACTED]");
+        expect(records[0]!.accessToken).toBe("[REDACTED]");
+        expect(records[0]!.refreshToken).toBe("[REDACTED]");
+        expect(records[0]!.apiKey).toBe("[REDACTED]");
     });
 
     it("should redact nested sensitive keys at multiple depths", () => {
@@ -457,8 +457,8 @@ describe("defineConfig", () => {
             a: { b: { token: "d2" } },
         });
 
-        expect(records[0].user.password).toBe("[REDACTED]");
-        expect(records[0].a.b.token).toBe("[REDACTED]");
+        expect(records[0]!.user.password).toBe("[REDACTED]");
+        expect(records[0]!.a.b.token).toBe("[REDACTED]");
     });
 
     it("should redact authorization and cookie headers", () => {
@@ -467,9 +467,9 @@ describe("defineConfig", () => {
             res: { headers: { "set-cookie": "sid=SECRET" } },
         });
 
-        expect(records[0].req.headers.authorization).toBe("[REDACTED]");
-        expect(records[0].req.headers.cookie).toBe("[REDACTED]");
-        expect(records[0].res.headers["set-cookie"]).toBe("[REDACTED]");
+        expect(records[0]!.req.headers.authorization).toBe("[REDACTED]");
+        expect(records[0]!.req.headers.cookie).toBe("[REDACTED]");
+        expect(records[0]!.res.headers["set-cookie"]).toBe("[REDACTED]");
     });
 
     it("should redact sensitive query parameters", () => {
@@ -477,8 +477,8 @@ describe("defineConfig", () => {
             req: { query: { token: "leak", page: "1" } },
         });
 
-        expect(records[0].req.query.token).toBe("[REDACTED]");
-        expect(records[0].req.query.page).toBe("1");
+        expect(records[0]!.req.query.token).toBe("[REDACTED]");
+        expect(records[0]!.req.query.page).toBe("1");
     });
 });
 
@@ -723,20 +723,20 @@ describe("createTransport", () => {
 
     it("should honor destination for the pretty target", () => {
         const transport = createTransport({ target: "pretty", destination: "/tmp/pretty.log" });
-        const options = transport.targets[0].options as Record<string, unknown>;
+        const options = (transport.targets[0] as any).options as Record<string, unknown>;
         expect(options.destination).toBe("/tmp/pretty.log");
     });
 
     it("should honor a stream destination for the pretty target", () => {
         const stream = new Writable({ write(_c, _e, cb) { cb(); } });
         const transport = createTransport({ target: "pretty", destination: stream });
-        const options = transport.targets[0].options as Record<string, unknown>;
+        const options = (transport.targets[0] as any).options as Record<string, unknown>;
         expect(options.destination).toBe(stream);
     });
 
     it("should honor an explicit level", () => {
         const transport = createTransport({ target: "pretty", level: "warn" });
-        expect(transport.targets[0].level).toBe("warn");
+        expect((transport.targets[0] as any).level).toBe("warn");
     });
 });
 
@@ -748,8 +748,8 @@ describe("createMultiTransport", () => {
         ]);
         expect(transport).toBeDefined();
         expect(transport.targets).toHaveLength(2);
-        expect(transport.targets[0].level).toBe("info");
-        expect(transport.targets[1].level).toBe("debug");
+        expect((transport.targets[0] as any).level).toBe("info");
+        expect((transport.targets[1] as any).level).toBe("debug");
     });
 
     it("should preserve per-target destinations", () => {
@@ -757,8 +757,8 @@ describe("createMultiTransport", () => {
             { target: "pretty", destination: "/tmp/a.log", level: "info" },
             { target: "file", destination: "/tmp/b.log", level: "debug" },
         ]);
-        const first = transport.targets[0].options as Record<string, unknown>;
-        const second = transport.targets[1].options as Record<string, unknown>;
+        const first = (transport.targets[0] as any).options as Record<string, unknown>;
+        const second = (transport.targets[1] as any).options as Record<string, unknown>;
         expect(first.destination).toBe("/tmp/a.log");
         expect(second.destination).toBe("/tmp/b.log");
     });
@@ -837,7 +837,7 @@ describe("createHttpLogger", () => {
 
         await new Promise<void>((resolve) => srv.close(() => resolve()));
 
-        const line = records[0];
+        const line = records[0]!;
         expect(line).toBeDefined();
 
         const serialized = JSON.stringify(line);
@@ -878,7 +878,7 @@ function captureWithConfig(config: pino.LoggerOptions, payload: Record<string, u
         },
     });
 
-    pino({ ...config, level: config.level === "silent" ? "info" : config.level }, dest).info(payload, "m");
+    pino({ ...config, level: config.level === "silent" ? "info" : config.level as string }, dest).info(payload, "m");
 
     return records;
 }

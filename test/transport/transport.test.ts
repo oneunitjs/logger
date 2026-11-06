@@ -32,7 +32,7 @@ describe("createTransport: pretty target", () => {
     it("creates pretty transport with defaults", () => {
         const transport = createTransport({ target: "pretty" });
         expect(transport.targets).toHaveLength(1);
-        expect(transport.targets[0].target).toBe("pino-pretty");
+        expect((transport.targets[0] as any).target).toBe("pino-pretty");
     });
 
     it("honors destination for pretty target", () => {
@@ -40,13 +40,13 @@ describe("createTransport: pretty target", () => {
             target: "pretty",
             destination: "/tmp/pretty.log",
         });
-        const options = transport.targets[0].options as Record<string, unknown>;
+        const options = (transport.targets[0] as any).options as Record<string, unknown>;
         expect(options.destination).toBe("/tmp/pretty.log");
     });
 
     it("honors an explicit level", () => {
         const transport = createTransport({ target: "pretty", level: "warn" });
-        expect(transport.targets[0].level).toBe("warn");
+        expect((transport.targets[0] as any).level).toBe("warn");
     });
 });
 
@@ -54,7 +54,7 @@ describe("createTransport: file target", () => {
     it("creates file transport with destination", () => {
         const transport = createTransport({ target: "file", destination: "/tmp/app.log" });
         expect(transport.targets).toHaveLength(1);
-        expect(transport.targets[0].target).toBe("pino/file");
+        expect((transport.targets[0] as any).target).toBe("pino/file");
     });
 
     it("passes target options to file transport", () => {
@@ -63,7 +63,7 @@ describe("createTransport: file target", () => {
             destination: "/tmp/app.log",
             options: { mkdir: true },
         });
-        const options = transport.targets[0].options as Record<string, unknown>;
+        const options = (transport.targets[0] as any).options as Record<string, unknown>;
         expect(options.destination).toBe("/tmp/app.log");
         expect(options.mkdir).toBe(true);
     });
@@ -91,8 +91,8 @@ describe("createMultiTransport: composition", () => {
         ]);
 
         expect(transport.targets).toHaveLength(2);
-        expect(transport.targets[0].level).toBe("info");
-        expect(transport.targets[1].level).toBe("debug");
+        expect((transport.targets[0] as any).level).toBe("info");
+        expect((transport.targets[1] as any).level).toBe("debug");
     });
 
     it("preserves per-target destinations", () => {
@@ -101,8 +101,8 @@ describe("createMultiTransport: composition", () => {
             { target: "file", destination: "/tmp/b.log", level: "debug" },
         ]);
 
-        const first = transport.targets[0].options as Record<string, unknown>;
-        const second = transport.targets[1].options as Record<string, unknown>;
+        const first = (transport.targets[0] as any).options as Record<string, unknown>;
+        const second = (transport.targets[1] as any).options as Record<string, unknown>;
         expect(first.destination).toBe("/tmp/a.log");
         expect(second.destination).toBe("/tmp/b.log");
     });

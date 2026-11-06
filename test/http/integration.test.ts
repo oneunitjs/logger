@@ -128,7 +128,7 @@ describe("Fastify integration: documented loggerInstance path", () => {
         try {
             await app.inject({ method: "GET", url: "/hello" });
 
-            const stamp = records[0].time;
+            const stamp = records[0]!.time;
             expect(typeof stamp, "no time field").toBe("string");
             // `pino.stdTimeFunctions.isoTime` emits an ISO-8601 string; a
             // Fastify default would still be a string, so assert the format

@@ -13,11 +13,11 @@ describe("error serialization: Error.cause chains", () => {
         const logger = createLogger({ mode: "production", destination: stream });
         logger.error({ err: outer }, "caused error");
 
-        expect(records[0].err.type).toBe("Error");
-        expect(records[0].err.message).toBe("outer failure");
-        expect(records[0].err.cause).toBeDefined();
-        expect(records[0].err.cause.type).toBe("Error");
-        expect(records[0].err.cause.message).toBe("inner failure");
+        expect(records[0]!.err.type).toBe("Error");
+        expect(records[0]!.err.message).toBe("outer failure");
+        expect(records[0]!.err.cause).toBeDefined();
+        expect(records[0]!.err.cause.type).toBe("Error");
+        expect(records[0]!.err.cause.message).toBe("inner failure");
     });
 
     it("handles circular cause chains without infinite recursion", () => {
@@ -40,12 +40,12 @@ describe("error serialization: Error.cause chains", () => {
         const logger = createLogger({ mode: "production", destination: stream });
         logger.error({ err: agg }, "aggregate error");
 
-        expect(records[0].err.type).toBe("AggregateError");
-        expect(records[0].err.message).toBe("multiple failures");
-        expect(Array.isArray(records[0].err.errors)).toBe(true);
-        expect(records[0].err.errors).toHaveLength(2);
-        expect(records[0].err.errors[0].message).toBe("err1");
-        expect(records[0].err.errors[1].message).toBe("err2");
+        expect(records[0]!.err.type).toBe("AggregateError");
+        expect(records[0]!.err.message).toBe("multiple failures");
+        expect(Array.isArray(records[0]!.err.errors)).toBe(true);
+        expect(records[0]!.err.errors).toHaveLength(2);
+        expect(records[0]!.err.errors[0].message).toBe("err1");
+        expect(records[0]!.err.errors[1].message).toBe("err2");
     });
 
     it("preserves own enumerable properties on errors", () => {
@@ -56,8 +56,8 @@ describe("error serialization: Error.cause chains", () => {
         const logger = createLogger({ mode: "production", destination: stream });
         logger.error({ err: error }, "error with metadata");
 
-        expect(records[0].err.code).toBe("ECONNREFUSED");
-        expect(records[0].err.errno).toBe(-111);
+        expect(records[0]!.err.code).toBe("ECONNREFUSED");
+        expect(records[0]!.err.errno).toBe(-111);
     });
 
     it("masks sensitive metadata attached to errors", () => {
@@ -71,8 +71,8 @@ describe("error serialization: Error.cause chains", () => {
         const logger = createLogger({ mode: "production", destination: stream });
         logger.error({ err: error }, "auth failed");
 
-        expect(records[0].err.password).toBe("[REDACTED]");
-        expect(records[0].err.token).toBe("[REDACTED]");
-        expect(records[0].err.message).toBe("auth failed");
+        expect(records[0]!.err.password).toBe("[REDACTED]");
+        expect(records[0]!.err.token).toBe("[REDACTED]");
+        expect(records[0]!.err.message).toBe("auth failed");
     });
 });

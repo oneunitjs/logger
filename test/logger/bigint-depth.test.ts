@@ -19,8 +19,8 @@ describe("BigInt safety (TC-028)", () => {
 
         logger.info({ accountNumber: 12345678901234567890n }, "bigint");
 
-        expect(typeof records[0].accountNumber).toBe("string");
-        expect(records[0].accountNumber).toBe("12345678901234567890");
+        expect(typeof records[0]!.accountNumber).toBe("string");
+        expect(records[0]!.accountNumber).toBe("12345678901234567890");
         expect(() => JSON.parse(JSON.stringify(records))).not.toThrow();
     });
 
@@ -37,7 +37,7 @@ describe("BigInt safety (TC-028)", () => {
 
         const text = JSON.stringify(records);
         expect(() => JSON.parse(text)).not.toThrow();
-        expect(records[0].accountNumber).toBe("9007199254740991");
+        expect(records[0]!.accountNumber).toBe("9007199254740991");
     });
 
     it("does not throw when BigInt is nested deeply", () => {
@@ -72,7 +72,7 @@ describe("maximum redaction depth (TC-029)", () => {
 
         logger.info({ deep }, "within depth");
 
-        let node: unknown = records[0].deep;
+        let node: unknown = records[0]!.deep;
         for (let i = 0; i < 50; i++) {
             node = (node as Record<string, unknown>).next;
         }
@@ -98,7 +98,7 @@ describe("maximum redaction depth (TC-029)", () => {
 
         logger.info({ deep }, "custom depth");
 
-        let node: unknown = records[0].deep;
+        let node: unknown = records[0]!.deep;
         for (let i = 0; i < 8; i++) {
             node = (node as Record<string, unknown>).next;
         }

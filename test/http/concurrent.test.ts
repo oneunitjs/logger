@@ -32,7 +32,7 @@ async function bootWithLoggerInstance() {
     });
 
     app.setErrorHandler((error, request, reply) => {
-        Object.assign(error, { password: SECRET });
+        Object.assign(error as Record<string, unknown>, { password: SECRET });
         request.log.error({ err: error }, "handled error");
         return reply.status(500).send({ error: "internal" });
     });

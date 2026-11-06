@@ -82,8 +82,8 @@ describe("redaction: every log mode", () => {
             logger.info({ password: SECRETS.password, nested: { token: SECRETS.token } }, "mode check");
 
             expect(records, `no output in ${mode} mode`).toHaveLength(1);
-            expect(records[0].password).toBe(REDACTED);
-            expect(records[0].nested.token).toBe(REDACTED);
+            expect(records[0]!.password).toBe(REDACTED);
+            expect(records[0]!.nested.token).toBe(REDACTED);
             expect(JSON.stringify(records)).not.toContain(SECRETS.password);
         },
     );
@@ -95,7 +95,7 @@ describe("redaction: key positions", () => {
 
         logger.info({ password: SECRETS.password }, "top level");
 
-        expect(records[0].password).toBe(REDACTED);
+        expect(records[0]!.password).toBe(REDACTED);
     });
 
     it("masks a sensitive key in a nested object", () => {
@@ -105,7 +105,7 @@ describe("redaction: key positions", () => {
             user: { credentials: { password: SECRETS.password } },
         }, "nested");
 
-        expect(records[0].user.credentials.password).toBe(REDACTED);
+        expect(records[0]!.user.credentials.password).toBe(REDACTED);
     });
 
     it("masks a sensitive key across multiple nesting levels", () => {
@@ -113,7 +113,7 @@ describe("redaction: key positions", () => {
 
         logger.info({ a: { b: { c: { token: SECRETS.token } } } }, "deep");
 
-        expect(records[0].a.b.c.token).toBe(REDACTED);
+        expect(records[0]!.a.b.c.token).toBe(REDACTED);
     });
 
     it("masks a sensitive key inside arrays", () => {
@@ -126,9 +126,9 @@ describe("redaction: key positions", () => {
             ],
         }, "array");
 
-        expect(records[0].users[0].password).toBe(REDACTED);
-        expect(records[0].users[1].password).toBe(REDACTED);
-        expect(records[0].users[0].id).toBe(1);
+        expect(records[0]!.users[0].password).toBe(REDACTED);
+        expect(records[0]!.users[1].password).toBe(REDACTED);
+        expect(records[0]!.users[0].id).toBe(1);
     });
 
     it("masks a sensitive key in mixed object and array structures", () => {
@@ -141,9 +141,9 @@ describe("redaction: key positions", () => {
             ],
         }, "mixed");
 
-        expect(records[0].tenants[0].secrets[0].apiKey).toBe(REDACTED);
-        expect(records[0].tenants[1].nested.deep[0].token).toBe(REDACTED);
-        expect(records[0].tenants[0].name).toBe("acme");
+        expect(records[0]!.tenants[0].secrets[0].apiKey).toBe(REDACTED);
+        expect(records[0]!.tenants[1].nested.deep[0].token).toBe(REDACTED);
+        expect(records[0]!.tenants[0].name).toBe("acme");
     });
 
     it.each(SENSITIVE_KEYS)("masks the key %s", (key) => {
@@ -151,7 +151,7 @@ describe("redaction: key positions", () => {
 
         logger.info({ [key]: "value-for-key" }, "key under test");
 
-        expect(records[0][key], `${key} was not masked`).toBe(REDACTED);
+        expect(records[0]![key], `${key} was not masked`).toBe(REDACTED);
     });
 
     it("masks sensitive keys regardless of casing", () => {
@@ -166,7 +166,7 @@ describe("redaction: key positions", () => {
         }, "casing");
 
         for (const key of ["AccessToken", "APIKEY", "ClientSecret", "PassWord", "AUTHORIZATION"]) {
-            expect(records[0][key], `${key} was not masked`).toBe(REDACTED);
+            expect(records[0]![key], `${key} was not masked`).toBe(REDACTED);
         }
     });
 
@@ -181,10 +181,10 @@ describe("redaction: key positions", () => {
             cookies: 12,
         }, "non-sensitive");
 
-        expect(records[0].userName).toBe("alice");
-        expect(records[0].tokenCount).toBe(4);
-        expect(records[0].secretariat).toBe("meeting");
-        expect(records[0].cookies).toBe(12);
+        expect(records[0]!.userName).toBe("alice");
+        expect(records[0]!.tokenCount).toBe(4);
+        expect(records[0]!.secretariat).toBe("meeting");
+        expect(records[0]!.cookies).toBe(12);
     });
 });
 
@@ -202,8 +202,8 @@ describe("redaction: toJSON escape routes", () => {
 
         logger.info({ model: new Model() }, "model");
 
-        expect(records[0].model.password).toBe(REDACTED);
-        expect(records[0].model.note).toBe("visible");
+        expect(records[0]!.model.password).toBe(REDACTED);
+        expect(records[0]!.model.note).toBe("visible");
     });
 
     it("masks an own toJSON on a plain object", () => {
@@ -217,7 +217,7 @@ describe("redaction: toJSON escape routes", () => {
             },
         }, "own toJSON");
 
-        expect(records[0].payload.token).toBe(REDACTED);
+        expect(records[0]!.payload.token).toBe(REDACTED);
     });
 
     it("masks a toJSON that returns itself", () => {
@@ -234,7 +234,7 @@ describe("redaction: toJSON escape routes", () => {
 
         logger.info({ model: new SelfReturning() }, "self-returning toJSON");
 
-        expect(records[0].model.password).toBe(REDACTED);
+        expect(records[0]!.model.password).toBe(REDACTED);
         assertNoSecret(records, { password: SECRETS.password }, "self-returning toJSON");
     });
 });
@@ -250,10 +250,10 @@ describe("redaction: error objects", () => {
 
         logger.error({ err: error }, "auth failed");
 
-        expect(records[0].err.password).toBe(REDACTED);
-        expect(records[0].err.token).toBe(REDACTED);
+        expect(records[0]!.err.password).toBe(REDACTED);
+        expect(records[0]!.err.token).toBe(REDACTED);
         // The message itself is not a redacted key and must survive.
-        expect(records[0].err.message).toBe("Authentication failed");
+        expect(records[0]!.err.message).toBe("Authentication failed");
     });
 
     it("preserves the error type and stack when redacting an error", () => {
@@ -268,10 +268,10 @@ describe("redaction: error objects", () => {
 
         logger.error({ err: error }, "failed");
 
-        expect(records[0].err.type).toBe("Error");
-        expect(records[0].err.message).toBe("boom");
-        expect(records[0].err.stack).toContain("Error: boom");
-        expect(records[0].err.apiKey).toBe(REDACTED);
+        expect(records[0]!.err.type).toBe("Error");
+        expect(records[0]!.err.message).toBe("boom");
+        expect(records[0]!.err.stack).toContain("Error: boom");
+        expect(records[0]!.err.apiKey).toBe(REDACTED);
         assertNoSecret(records, { apiKey: SECRETS.apiKey }, "error stack preservation");
     });
 
@@ -282,9 +282,9 @@ describe("redaction: error objects", () => {
 
         logger.error({ err: new Error("clean") }, "no secrets");
 
-        expect(records[0].err.type).toBe("Error");
-        expect(records[0].err.message).toBe("clean");
-        expect(records[0].err.stack).toContain("Error: clean");
+        expect(records[0]!.err.type).toBe("Error");
+        expect(records[0]!.err.message).toBe("clean");
+        expect(records[0]!.err.stack).toContain("Error: clean");
     });
 
     it("masks sensitive metadata on a positional Error", () => {
@@ -294,7 +294,7 @@ describe("redaction: error objects", () => {
 
         logger.error(error, "positional");
 
-        expect(records[0].err.apiKey).toBe(REDACTED);
+        expect(records[0]!.err.apiKey).toBe(REDACTED);
     });
 
     it("masks an error nested inside a result field", () => {
@@ -314,8 +314,8 @@ describe("redaction: child logger bindings", () => {
 
         logger.child({ apiKey: SECRETS.apiKey, requestId: "r1" }).info("child");
 
-        expect(records[0].apiKey).toBe(REDACTED);
-        expect(records[0].requestId).toBe("r1");
+        expect(records[0]!.apiKey).toBe(REDACTED);
+        expect(records[0]!.requestId).toBe("r1");
     });
 
     it("masks bindings passed to createChildLogger", () => {
@@ -323,7 +323,7 @@ describe("redaction: child logger bindings", () => {
 
         createChildLogger(logger, { password: SECRETS.password }).info("child");
 
-        expect(records[0].password).toBe(REDACTED);
+        expect(records[0]!.password).toBe(REDACTED);
     });
 
     it("masks bindings supplied at logger creation", () => {
@@ -337,8 +337,8 @@ describe("redaction: child logger bindings", () => {
 
         logger.info("created with bindings");
 
-        expect(records[0].clientSecret).toBe(REDACTED);
-        expect(records[0].tenant).toBe("acme");
+        expect(records[0]!.clientSecret).toBe(REDACTED);
+        expect(records[0]!.tenant).toBe("acme");
     });
 
     it("masks bindings on nested children while keeping inherited ones", () => {
@@ -350,9 +350,9 @@ describe("redaction: child logger bindings", () => {
             .child({ token: SECRETS.token })
             .info("nested");
 
-        expect(records[0].apiKey).toBe(REDACTED);
-        expect(records[0].token).toBe(REDACTED);
-        expect(records[0].requestId).toBe("r1");
+        expect(records[0]!.apiKey).toBe(REDACTED);
+        expect(records[0]!.token).toBe(REDACTED);
+        expect(records[0]!.requestId).toBe("r1");
     });
 });
 
@@ -364,7 +364,7 @@ describe("redaction: request metadata", () => {
             req: { method: "GET", url: `/login?token=${SECRETS.token}`, headers: {} },
         }, "url");
 
-        expect(records[0].req.url).toBe("/login");
+        expect(records[0]!.req.url).toBe("/login");
     });
 
     it("masks sensitive headers on an emitted request", () => {
@@ -382,10 +382,10 @@ describe("redaction: request metadata", () => {
             },
         }, "headers");
 
-        expect(records[0].req.headers.authorization).toBe(REDACTED);
-        expect(records[0].req.headers.cookie).toBe(REDACTED);
-        expect(records[0].req.headers["x-api-key"]).toBe(REDACTED);
-        expect(records[0].req.headers["user-agent"]).toBe("test-agent");
+        expect(records[0]!.req.headers.authorization).toBe(REDACTED);
+        expect(records[0]!.req.headers.cookie).toBe(REDACTED);
+        expect(records[0]!.req.headers["x-api-key"]).toBe(REDACTED);
+        expect(records[0]!.req.headers["user-agent"]).toBe("test-agent");
     });
 
     it("masks a set-cookie response header", () => {
@@ -395,8 +395,8 @@ describe("redaction: request metadata", () => {
             res: { statusCode: 200, headers: { "set-cookie": SET_COOKIE, "x-app": "ok" } },
         }, "response");
 
-        expect(records[0].res.headers["set-cookie"]).toBe(REDACTED);
-        expect(records[0].res.headers["x-app"]).toBe("ok");
+        expect(records[0]!.res.headers["set-cookie"]).toBe(REDACTED);
+        expect(records[0]!.res.headers["x-app"]).toBe("ok");
     });
 });
 
@@ -412,7 +412,7 @@ describe("hostile payloads do not defeat redaction", () => {
         };
 
         expect(() => logger.info({ hostile }, "throwing getter")).not.toThrow();
-        expect(records[0].hostile.password).toBe(REDACTED);
+        expect(records[0]!.hostile.password).toBe(REDACTED);
     });
 
     it("survives a proxy with a throwing ownKeys trap", () => {
@@ -540,8 +540,8 @@ describe("runtime objects are preserved, not deep-walked", () => {
 
         logger.child({ meta: { apiKey: SECRETS.apiKey, ok: "visible" } }).info("mixed bindings");
 
-        expect(records[0].meta.apiKey).toBe(REDACTED);
-        expect(records[0].meta.ok).toBe("visible");
+        expect(records[0]!.meta.apiKey).toBe(REDACTED);
+        expect(records[0]!.meta.ok).toBe("visible");
     });
 
     it("still redacts arrays nested inside bindings", () => {
@@ -549,7 +549,7 @@ describe("runtime objects are preserved, not deep-walked", () => {
 
         logger.child({ users: [{ token: SECRETS.token }] }).info("array bindings");
 
-        expect(records[0].users[0].token).toBe(REDACTED);
+        expect(records[0]!.users[0].token).toBe(REDACTED);
     });
 });
 
@@ -568,10 +568,10 @@ describe("large payloads", () => {
 
         logger.info(large, "large payload");
 
-        expect(records[0].group49.nested.deeper.token).toBe(REDACTED);
-        expect(records[0].group49.nested.deeper.label).toBe("item-49");
-        expect(records[0].group0.nested.deeper.token).toBe(REDACTED);
-        expect(records[0].group0.id).toBe(0);
+        expect(records[0]!.group49.nested.deeper.token).toBe(REDACTED);
+        expect(records[0]!.group49.nested.deeper.label).toBe("item-49");
+        expect(records[0]!.group0.nested.deeper.token).toBe(REDACTED);
+        expect(records[0]!.group0.id).toBe(0);
 
         // Caller-owned data must be unchanged.
         expect(large.group49.nested.deeper.token).toBe("secret-49");
@@ -584,10 +584,10 @@ describe("large payloads", () => {
 
         logger.info({ items }, "large array");
 
-        expect(records[0].items).toHaveLength(2_000);
-        expect(records[0].items[1_999].password).toBe(REDACTED);
-        expect(records[0].items[1_999].id).toBe(1_999);
-        expect(items[1_999].password).toBe("p-1999");
+        expect(records[0]!.items).toHaveLength(2_000);
+        expect(records[0]!.items[1_999].password).toBe(REDACTED);
+        expect(records[0]!.items[1_999].id).toBe(1_999);
+        expect(items[1_999]!.password).toBe("p-1999");
     });
 });
 
@@ -618,8 +618,8 @@ describe("caller-owned data is never mutated", () => {
         logger.info({ shared }, "second");
 
         expect(shared.password).toBe(SECRETS.password);
-        expect(records[0].shared.password).toBe(REDACTED);
-        expect(records[1].shared.password).toBe(REDACTED);
+        expect(records[0]!.shared.password).toBe(REDACTED);
+        expect(records[1]!.shared.password).toBe(REDACTED);
     });
 
     it("does not mutate via redactLogObject directly", () => {
@@ -661,7 +661,7 @@ describe("secure defaults are consistent across every entry point", () => {
 
         logger.info({ req: { method: "GET", url: "/x?token=leak", headers: {} } }, "default");
 
-        expect(records[0].req.url).toBe("/x");
+        expect(records[0]!.req.url).toBe("/x");
         expect(JSON.stringify(records)).not.toContain("token=leak");
     });
 
@@ -701,7 +701,7 @@ describe("secure defaults are consistent across every entry point", () => {
         logger.info({ req: { method: "GET", url: "/x?token=leak", headers: {} } }, "agree");
 
         expect(fromSerializers.url).toBe("/x");
-        expect(records[0].req.url).toBe("/x");
+        expect(records[0]!.req.url).toBe("/x");
     });
 });
 
@@ -725,9 +725,9 @@ describe("security invariants", () => {
             list: [{ token: "c" }],
         }, "policy");
 
-        expect(records[0].password).toBe(REDACTED);
-        expect(records[0].nested.deeper.apiKey).toBe(REDACTED);
-        expect(records[0].list[0].token).toBe(REDACTED);
+        expect(records[0]!.password).toBe(REDACTED);
+        expect(records[0]!.nested.deeper.apiKey).toBe(REDACTED);
+        expect(records[0]!.list[0].token).toBe(REDACTED);
     });
 
     it("Invariant 3: runtime objects are not deep-walked for redaction", () => {
@@ -755,7 +755,7 @@ describe("security invariants", () => {
             res: { statusCode: 200, headers: { "set-cookie": "LEAK" } },
         }, "native redact");
 
-        expect(records[0].res.headers["set-cookie"]).toBe(REDACTED);
+        expect(records[0]!.res.headers["set-cookie"]).toBe(REDACTED);
         expect(JSON.stringify(records)).not.toContain("LEAK");
     });
 
@@ -765,8 +765,8 @@ describe("security invariants", () => {
         const child = logger.child({ requestId: "1" });
         child.info({ password: "LEAK" }, "from child");
 
-        expect(records[0].password).toBe(REDACTED);
-        expect(records[0].requestId).toBe("1");
+        expect(records[0]!.password).toBe(REDACTED);
+        expect(records[0]!.requestId).toBe("1");
     });
 
     it("Invariant 6: the documented Fastify path uses the package logger", () => {
@@ -777,7 +777,7 @@ describe("security invariants", () => {
 
         logger.info({ password: "LEAK" }, "package logger");
 
-        expect(records[0].password).toBe(REDACTED);
+        expect(records[0]!.password).toBe(REDACTED);
     });
 
     it("Invariant 7: caller-owned objects are not mutated", () => {
@@ -814,7 +814,7 @@ describe("child loggers inherit parent configuration", () => {
             .child({ requestId: "req-1" })
             .info({ password: "LEAK" }, "from child");
 
-        const record = records[0];
+        const record = records[0]!;
 
         expect(record.password, "child lost the redaction formatter").toBe(REDACTED);
         expect(record.requestId, "child lost its bindings").toBe("req-1");
@@ -834,8 +834,8 @@ describe("child loggers inherit parent configuration", () => {
             .child({ requestId: "req-2" }, { serializers: {} })
             .info({ password: "LEAK" }, "child with options");
 
-        expect(records[0].password).toBe(REDACTED);
-        expect(records[0].level).toBe("info");
+        expect(records[0]!.password).toBe(REDACTED);
+        expect(records[0]!.level).toBe("info");
     });
 
     it("keeps redaction through several levels of nesting", () => {
@@ -847,10 +847,10 @@ describe("child loggers inherit parent configuration", () => {
             .child({ c: "3" })
             .info({ token: "LEAK" }, "deep child");
 
-        expect(records[0].token).toBe(REDACTED);
-        expect(records[0].a).toBe("1");
-        expect(records[0].b).toBe("2");
-        expect(records[0].c).toBe("3");
+        expect(records[0]!.token).toBe(REDACTED);
+        expect(records[0]!.a).toBe("1");
+        expect(records[0]!.b).toBe("2");
+        expect(records[0]!.c).toBe("3");
     });
 
     it("keeps the parent's serializers on a child", () => {
@@ -862,7 +862,7 @@ describe("child loggers inherit parent configuration", () => {
             .child({ requestId: "req-3" })
             .info({ req: { method: "GET", url: "/x?token=LEAK", headers: {} } }, "child serializer");
 
-        expect(records[0].req.url).toBe("/x");
+        expect(records[0]!.req.url).toBe("/x");
         expect(JSON.stringify(records)).not.toContain("LEAK");
     });
 });
@@ -878,7 +878,7 @@ describe("query strings are stripped wherever a URL is logged", () => {
 
         logger.info({ url: "/pay?token=LEAK" }, "route log");
 
-        expect(records[0].url).toBe("/pay");
+        expect(records[0]!.url).toBe("/pay");
         expect(JSON.stringify(records)).not.toContain("LEAK");
     });
 
@@ -895,7 +895,7 @@ describe("query strings are stripped wherever a URL is logged", () => {
 
         logger.info({ [key]: value }, "url casing");
 
-        expect(records[0][key], `${key} was not stripped`).toBe(expected);
+        expect(records[0]![key], `${key} was not stripped`).toBe(expected);
         expect(JSON.stringify(records)).not.toContain("LEAK");
     });
 
@@ -904,7 +904,7 @@ describe("query strings are stripped wherever a URL is logged", () => {
 
         logger.info({ ctx: { a: { b: { url: "/x?token=LEAK" } } } }, "nested url");
 
-        expect(records[0].ctx.a.b.url).toBe("/x");
+        expect(records[0]!.ctx.a.b.url).toBe("/x");
         expect(JSON.stringify(records)).not.toContain("LEAK");
     });
 
@@ -913,8 +913,8 @@ describe("query strings are stripped wherever a URL is logged", () => {
 
         logger.info({ links: [{ url: "/a?token=LEAK" }, { url: "/b" }] }, "array urls");
 
-        expect(records[0].links[0].url).toBe("/a");
-        expect(records[0].links[1].url).toBe("/b");
+        expect(records[0]!.links[0].url).toBe("/a");
+        expect(records[0]!.links[1].url).toBe("/b");
     });
 
     it("leaves a url with no query string untouched", () => {
@@ -922,7 +922,7 @@ describe("query strings are stripped wherever a URL is logged", () => {
 
         logger.info({ url: "/plain/path" }, "no query");
 
-        expect(records[0].url).toBe("/plain/path");
+        expect(records[0]!.url).toBe("/plain/path");
     });
 
     it("does not strip a non-url field that merely contains a question mark", () => {
@@ -930,8 +930,8 @@ describe("query strings are stripped wherever a URL is logged", () => {
 
         logger.info({ note: "why did this fail?", pattern: "a?*" }, "not a url");
 
-        expect(records[0].note).toBe("why did this fail?");
-        expect(records[0].pattern).toBe("a?*");
+        expect(records[0]!.note).toBe("why did this fail?");
+        expect(records[0]!.pattern).toBe("a?*");
     });
 
     it("does not mutate the caller's url", () => {
@@ -948,7 +948,7 @@ describe("query strings are stripped wherever a URL is logged", () => {
 
         logger.child({ url: "/pay?token=LEAK" }).info("bound url");
 
-        expect(records[0].url).toBe("/pay");
+        expect(records[0]!.url).toBe("/pay");
         expect(JSON.stringify(records)).not.toContain("LEAK");
     });
 });

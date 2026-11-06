@@ -48,13 +48,13 @@ async function waitForContent(file: string, timeoutMs = 2000): Promise<string> {
 describe("createTransport validation (TC-063)", () => {
     it("creates pretty transport and honors destination", () => {
         const transport = createTransport({ target: "pretty", destination: "/tmp/pretty.log" });
-        const options = transport.targets[0].options as Record<string, unknown>;
+        const options = (transport.targets[0] as any).options as Record<string, unknown>;
         expect(options.destination).toBe("/tmp/pretty.log");
     });
 
     it("creates file transport", () => {
         const transport = createTransport({ target: "file", destination: "/tmp/app.log" });
-        expect(transport.targets[0].target).toBe("pino/file");
+        expect((transport.targets[0] as any).target).toBe("pino/file");
     });
 
     it("creates stream transport options", () => {
@@ -64,8 +64,8 @@ describe("createTransport validation (TC-063)", () => {
             },
         });
         const transport = createTransport({ target: "stream", destination: stream });
-        expect(transport.targets[0].target).toBe("pino/file");
-        expect((transport.targets[0].options as Record<string, unknown>).destination).toBe(stream);
+        expect((transport.targets[0] as any).target).toBe("pino/file");
+        expect(((transport.targets[0] as any).options as Record<string, unknown>).destination).toBe(stream);
     });
 
     it("throws for file without destination", () => {
@@ -110,8 +110,8 @@ describe("file transport writes and flushes (TC-064, TC-067)", () => {
             const lines = content.split("\n").filter(Boolean);
             expect(lines.length).toBe(2);
             const parsed = lines.map((line) => JSON.parse(line));
-            expect(parsed[0].msg).toBe("one");
-            expect(parsed[1].msg).toBe("two");
+            expect(parsed[0]!.msg).toBe("one");
+            expect(parsed[1]!.msg).toBe("two");
         } finally {
             cleanupDir(dir);
         }
@@ -140,7 +140,7 @@ describe("stream transport writes to the destination (TC-065)", () => {
         const text = Buffer.concat(chunks).toString();
         const lines = text.trim().split("\n").filter(Boolean);
         expect(lines.length).toBeGreaterThan(0);
-        expect(JSON.parse(lines[0]).msg).toBe("stream");
+        expect(JSON.parse(lines[0]!).msg).toBe("stream");
     });
 });
 
@@ -168,14 +168,14 @@ describe("multi-transport (TC-066)", () => {
             const linesA = contentA.split("\n").filter(Boolean);
             // Target A is level "info", so it receives both the info and warn logs.
             expect(linesA.length).toBe(2);
-            expect(JSON.parse(linesA[0]).msg).toBe("info only");
-            expect(JSON.parse(linesA[1]).msg).toBe("warn both");
+            expect(JSON.parse(linesA[0]!).msg).toBe("info only");
+            expect(JSON.parse(linesA[1]!).msg).toBe("warn both");
 
             const contentB = await waitForContent(fileB);
             const linesB = contentB.split("\n").filter(Boolean);
             // Target B is level "warn", so it receives only the warn log.
             expect(linesB.length).toBe(1);
-            expect(JSON.parse(linesB[0]).msg).toBe("warn both");
+            expect(JSON.parse(linesB[0]!).msg).toBe("warn both");
         } finally {
             cleanupDir(dir);
         }

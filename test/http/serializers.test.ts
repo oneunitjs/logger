@@ -244,7 +244,7 @@ describe("query object: masking and preservation", () => {
             req: { method: "GET", url: "/x", headers: {}, query: { [key]: value, page: "2" } },
         }, "query casing");
 
-        const req = records[0].req;
+        const req = records[0]!.req;
         expect(req.query[key], `${key} was not masked`).toBe(REDACTED);
         expect(req.query.page, "harmless parameter was lost").toBe("2");
         expect(JSON.stringify(records)).not.toContain(SECRET);
@@ -269,8 +269,8 @@ describe("header redaction: emitted output", () => {
             req: { method: "GET", url: "/x", headers: { [header]: SECRET, "user-agent": "keep-me" } },
         }, "header casing");
 
-        expect(records[0].req.headers[header], `${header} was not masked`).toBe(REDACTED);
-        expect(records[0].req.headers["user-agent"], "harmless header was lost").toBe("keep-me");
+        expect(records[0]!.req.headers[header], `${header} was not masked`).toBe(REDACTED);
+        expect(records[0]!.req.headers["user-agent"], "harmless header was lost").toBe("keep-me");
     });
 
     it.each(["proxy-authorization", "Proxy-Authorization"])(
@@ -282,8 +282,8 @@ describe("header redaction: emitted output", () => {
                 req: { method: "GET", url: "/x", headers: { [header]: SECRET, "user-agent": "keep-me" } },
             }, "proxy auth");
 
-            expect(records[0].req.headers[header], `${header} was not masked`).toBe(REDACTED);
-            expect(records[0].req.headers["user-agent"], "harmless header was lost").toBe("keep-me");
+            expect(records[0]!.req.headers[header], `${header} was not masked`).toBe(REDACTED);
+            expect(records[0]!.req.headers["user-agent"], "harmless header was lost").toBe("keep-me");
         },
     );
 
@@ -294,8 +294,8 @@ describe("header redaction: emitted output", () => {
             res: { statusCode: 200, headers: { "set-cookie": SECRET, "content-type": "application/json" } },
         }, "response headers");
 
-        expect(records[0].res.headers["set-cookie"]).toBe(REDACTED);
-        expect(records[0].res.headers["content-type"]).toBe("application/json");
+        expect(records[0]!.res.headers["set-cookie"]).toBe(REDACTED);
+        expect(records[0]!.res.headers["content-type"]).toBe("application/json");
     });
 
     it("omits headers entirely when excludeHeaders is set", () => {

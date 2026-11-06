@@ -9,8 +9,8 @@ describe("child logger: binding redaction inheritance", () => {
 
         logger.child({ apiKey: "secret-key", requestId: "r1" }).info("child");
 
-        expect(records[0].apiKey).toBe(REDACTED);
-        expect(records[0].requestId).toBe("r1");
+        expect(records[0]!.apiKey).toBe(REDACTED);
+        expect(records[0]!.requestId).toBe("r1");
     });
 
     it("masks bindings on nested children while keeping inherited ones", () => {
@@ -22,9 +22,9 @@ describe("child logger: binding redaction inheritance", () => {
             .child({ token: "tok123" })
             .info("nested");
 
-        expect(records[0].apiKey).toBe(REDACTED);
-        expect(records[0].token).toBe(REDACTED);
-        expect(records[0].requestId).toBe("r1");
+        expect(records[0]!.apiKey).toBe(REDACTED);
+        expect(records[0]!.token).toBe(REDACTED);
+        expect(records[0]!.requestId).toBe("r1");
     });
 
     it("does not mutate caller's bindings object", () => {
@@ -44,8 +44,8 @@ describe("withContext: immutable context extension", () => {
         const requestLogger = withContext(logger, { requestId: "req-123", tenantId: "t1" });
         requestLogger.info("with context");
 
-        expect(records[0].requestId).toBe("req-123");
-        expect(records[0].tenantId).toBe("t1");
+        expect(records[0]!.requestId).toBe("req-123");
+        expect(records[0]!.tenantId).toBe("t1");
     });
 
     it("does not mutate the original logger", () => {
@@ -56,7 +56,7 @@ describe("withContext: immutable context extension", () => {
 
         // Original logger should not have requestId
         logger.info("original");
-        expect(records[1].requestId).toBeUndefined();
+        expect(records[1]!.requestId).toBeUndefined();
     });
 
     it("masks sensitive context values", () => {
@@ -68,8 +68,8 @@ describe("withContext: immutable context extension", () => {
         });
         requestLogger.info("with sensitive context");
 
-        expect(records[0].sessionToken).toBe(REDACTED);
-        expect(records[0].requestId).toBe("req-123");
+        expect(records[0]!.sessionToken).toBe(REDACTED);
+        expect(records[0]!.requestId).toBe("req-123");
     });
 
     it("is a no-op for empty context", () => {
@@ -92,10 +92,10 @@ describe("createLogger: context in base", () => {
 
         logger.info("context in base");
 
-        expect(records[0].service).toBe("payment-service");
-        expect(records[0].env).toBe("production");
-        expect(records[0].version).toBe("1.2.0");
-        expect(records[0].pid).toBe(process.pid);
-        expect(records[0].hostname).toBeDefined();
+        expect(records[0]!.service).toBe("payment-service");
+        expect(records[0]!.env).toBe("production");
+        expect(records[0]!.version).toBe("1.2.0");
+        expect(records[0]!.pid).toBe(process.pid);
+        expect(records[0]!.hostname).toBeDefined();
     });
 });

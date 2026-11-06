@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 
 import { createLogger } from "../../src/logger/logger.js";
+import type { LoggerOptions } from "../../src/types.js";
 import { collector, REDACTED } from "../helpers/helpers.js";
 
 /**
@@ -21,7 +22,7 @@ describe("custom rule: key-based with custom mask (TC-014)", () => {
 
         logger.info({ apiKey: API_KEY }, "custom mask");
 
-        expect(records[0].apiKey).toBe("[API_KEY_HIDDEN]");
+        expect(records[0]!.apiKey).toBe("[API_KEY_HIDDEN]");
         expect(JSON.stringify(records)).not.toContain(API_KEY);
     });
 
@@ -32,7 +33,7 @@ describe("custom rule: key-based with custom mask (TC-014)", () => {
 
         logger.info({ user: { sessionToken: TOKEN } }, "nested custom");
 
-        expect(records[0].user.sessionToken).toBe("[TOKEN_HIDDEN]");
+        expect(records[0]!.user.sessionToken).toBe("[TOKEN_HIDDEN]");
     });
 
     it("applies the custom key rule inside arrays", () => {
@@ -42,8 +43,8 @@ describe("custom rule: key-based with custom mask (TC-014)", () => {
 
         logger.info({ items: [{ internalId: "id-1" }, { internalId: "id-2" }] }, "array custom");
 
-        expect(records[0].items[0].internalId).toBe("[ID_HIDDEN]");
-        expect(records[0].items[1].internalId).toBe("[ID_HIDDEN]");
+        expect(records[0]!.items[0].internalId).toBe("[ID_HIDDEN]");
+        expect(records[0]!.items[1].internalId).toBe("[ID_HIDDEN]");
     });
 
     it("applies the custom key rule in child bindings", () => {
@@ -53,7 +54,7 @@ describe("custom rule: key-based with custom mask (TC-014)", () => {
 
         logger.child({ sessionToken: TOKEN }).info("child binding custom");
 
-        expect(records[0].sessionToken).toBe("[TOKEN_HIDDEN]");
+        expect(records[0]!.sessionToken).toBe("[TOKEN_HIDDEN]");
     });
 
     it("works in every mode", () => {
@@ -71,7 +72,7 @@ describe("custom rule: key-based with custom mask (TC-014)", () => {
 
             logger.info({ apiKey: API_KEY }, `mode ${mode}`);
 
-            expect(records[0].apiKey).toBe("[API_KEY_HIDDEN]");
+            expect(records[0]!.apiKey).toBe("[API_KEY_HIDDEN]");
             expect(JSON.stringify(records)).not.toContain(API_KEY);
         }
     });
@@ -90,10 +91,10 @@ describe("custom rule: regex path (TC-015)", () => {
             "unrelated": "keep",
         }, "path rule");
 
-        expect(records[0]["access.token"]).toBe("[TOKEN_REDACTED]");
-        expect(records[0]["user.token"]).toBe("[TOKEN_REDACTED]");
-        expect(records[0]["credentials.token"]).toBe("[TOKEN_REDACTED]");
-        expect(records[0].unrelated).toBe("keep");
+        expect(records[0]!["access.token"]).toBe("[TOKEN_REDACTED]");
+        expect(records[0]!["user.token"]).toBe("[TOKEN_REDACTED]");
+        expect(records[0]!["credentials.token"]).toBe("[TOKEN_REDACTED]");
+        expect(records[0]!.unrelated).toBe("keep");
     });
 
     it("does not affect non-matching paths", () => {
@@ -106,8 +107,8 @@ describe("custom rule: regex path (TC-015)", () => {
             "notoken": "keep-me-too",
         }, "non-matching");
 
-        expect(records[0]["token.value"]).toBe("keep-me");
-        expect(records[0].notoken).toBe("keep-me-too");
+        expect(records[0]!["token.value"]).toBe("keep-me");
+        expect(records[0]!.notoken).toBe("keep-me-too");
     });
 });
 
@@ -117,14 +118,14 @@ describe("custom rule: handler (TC-016)", () => {
             rules: [
                 {
                     keys: ["apiKey"],
-                    handler: (value) => `hash(${String(value).length})`,
+                    handler: (value: any) => `hash(${String(value).length})`,
                 },
             ],
         });
 
         logger.info({ apiKey: API_KEY }, "handler");
 
-        expect(records[0].apiKey).toBe(`hash(${API_KEY.length})`);
+        expect(records[0]!.apiKey).toBe(`hash(${API_KEY.length})`);
         expect(JSON.stringify(records)).not.toContain(API_KEY);
     });
 
@@ -138,7 +139,7 @@ describe("custom rule: handler (TC-016)", () => {
             rules: [
                 {
                     keys: ["apiKey"],
-                    handler: (value, key, context) => {
+                    handler: (value: any, key: string, context: { path: string[]; depth: number; isBinding: boolean }) => {
                         receivedKey = key;
                         receivedPath = context.path;
                         receivedDepth = context.depth;
@@ -171,18 +172,18 @@ describe("custom rule: handler (TC-016)", () => {
 
         logger.info({ apiKey: API_KEY }, "handler throws");
 
-        expect(records[0].apiKey).toBe(REDACTED);
+        expect(records[0]!.apiKey).toBe(REDACTED);
         expect(JSON.stringify(records)).not.toContain(API_KEY);
     });
 });
 
-function captureWithRedaction(redaction: Parameters<typeof createLogger>[0]["redaction"]) {
+function captureWithRedaction(redaction: LoggerOptions["redaction"]) {
     const { stream, records } = collector();
 
     const logger = createLogger({
         mode: "production",
         destination: stream,
-        redaction,
+        ...(redaction ? { redaction } : {}),
     });
 
     return { logger, records, stream };

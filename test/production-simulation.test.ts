@@ -182,12 +182,12 @@ describe("production simulation scenario C: multiple child loggers (Phase 12)", 
             expect(serialized).not.toContain(SECRET_PASSWORD);
         }
 
-        expect(records[0].apiKey).toBe("[REDACTED]");
-        expect(records[1].password).toBe("[REDACTED]");
-        expect(records[2].token).toBe("[REDACTED]");
-        expect(records[0].module).toBe("auth");
-        expect(records[1].module).toBe("payment");
-        expect(records[2].module).toBe("database");
+        expect(records[0]!.apiKey).toBe("[REDACTED]");
+        expect(records[1]!.password).toBe("[REDACTED]");
+        expect(records[2]!.token).toBe("[REDACTED]");
+        expect(records[0]!.module).toBe("auth");
+        expect(records[1]!.module).toBe("payment");
+        expect(records[2]!.module).toBe("database");
     });
 });
 
@@ -234,7 +234,7 @@ describe("production simulation scenario E: shutdown (Phase 12)", () => {
 
             const logger = createLogger({
                 mode: "production",
-                destination: transport,
+                destination: transport as unknown as NodeJS.WritableStream,
                 context: { service: "payment-service" },
             });
 
