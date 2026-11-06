@@ -35,15 +35,16 @@ describe("validateConfig: invalid mode", () => {
         const result = validateConfig({ mode: "staging" as any });
         expect(result.valid).toBe(false);
         expect(result.errors).toHaveLength(1);
-        expect(result.errors[0].field).toBe("mode");
-        expect(result.errors[0].message).toContain("staging");
-        expect(result.errors[0].suggestion).toBeDefined();
+        expect(result.errors[0]!.field).toBe("mode");
+        expect(result.errors[0]!.message).toContain("staging");
+        expect(result.errors[0]!.suggestion).toBeDefined();
     });
 
     it("rejects empty string mode", () => {
         const result = validateConfig({ mode: "" as any });
         expect(result.valid).toBe(false);
-        expect(result.errors[0].field).toBe("mode");
+        expect(result.errors).toHaveLength(1);
+        expect(result.errors[0]!.field).toBe("mode");
     });
 });
 
@@ -53,19 +54,22 @@ describe("validateConfig: invalid maxDepth", () => {
             redaction: { maxDepth: 3.14 as any },
         });
         expect(result.valid).toBe(false);
-        expect(result.errors[0].field).toBe("redaction.maxDepth");
+        expect(result.errors).toHaveLength(1);
+        expect(result.errors[0]!.field).toBe("redaction.maxDepth");
     });
 
     it("rejects maxDepth below 1", () => {
         const result = validateConfig({ redaction: { maxDepth: 0 } });
         expect(result.valid).toBe(false);
-        expect(result.errors[0].field).toBe("redaction.maxDepth");
+        expect(result.errors).toHaveLength(1);
+        expect(result.errors[0]!.field).toBe("redaction.maxDepth");
     });
 
     it("rejects maxDepth above 10000", () => {
         const result = validateConfig({ redaction: { maxDepth: 20000 } });
         expect(result.valid).toBe(false);
-        expect(result.errors[0].field).toBe("redaction.maxDepth");
+        expect(result.errors).toHaveLength(1);
+        expect(result.errors[0]!.field).toBe("redaction.maxDepth");
     });
 
     it("accepts boundary maxDepth values", () => {
@@ -83,7 +87,8 @@ describe("validateConfig: invalid custom keys", () => {
             redaction: { keys: ["valid", "", "also-valid"] },
         });
         expect(result.valid).toBe(false);
-        expect(result.errors[0].field).toBe("redaction.keys");
+        expect(result.errors).toHaveLength(1);
+        expect(result.errors[0]!.field).toBe("redaction.keys");
     });
 
     it("rejects non-string keys", () => {
@@ -91,7 +96,8 @@ describe("validateConfig: invalid custom keys", () => {
             redaction: { keys: [123 as any] },
         });
         expect(result.valid).toBe(false);
-        expect(result.errors[0].field).toBe("redaction.keys");
+        expect(result.errors).toHaveLength(1);
+        expect(result.errors[0]!.field).toBe("redaction.keys");
     });
 });
 
@@ -101,7 +107,8 @@ describe("validateConfig: invalid rules", () => {
             redaction: { rules: [{}] as any },
         });
         expect(result.valid).toBe(false);
-        expect(result.errors[0].field).toBe("redaction.rules[0]");
+        expect(result.errors).toHaveLength(1);
+        expect(result.errors[0]!.field).toBe("redaction.rules[0]");
     });
 
     it("rejects non-RegExp path", () => {
@@ -109,7 +116,8 @@ describe("validateConfig: invalid rules", () => {
             redaction: { rules: [{ path: "not-a-regex" as any }] },
         });
         expect(result.valid).toBe(false);
-        expect(result.errors[0].field).toBe("redaction.rules[0].path");
+        expect(result.errors).toHaveLength(1);
+        expect(result.errors[0]!.field).toBe("redaction.rules[0].path");
     });
 
     it("accepts valid rules", () => {
@@ -132,7 +140,8 @@ describe("validateConfig: invalid header allowlist", () => {
             redaction: { headerAllowlist: ["content-type", ""] },
         });
         expect(result.valid).toBe(false);
-        expect(result.errors[0].field).toBe("redaction.headerAllowlist");
+        expect(result.errors).toHaveLength(1);
+        expect(result.errors[0]!.field).toBe("redaction.headerAllowlist");
     });
 
     it("accepts valid header allowlist", () => {
