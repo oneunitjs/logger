@@ -72,7 +72,7 @@ jobs:
                   fetch-depth: 0
 
             - name: Scan for secrets
-              uses: trufflesecurity/trufflehog@v3
+              uses: trufflesecurity/trufflehog@v3.99.8
               with:
                   path: ./
                   only_verified: false
