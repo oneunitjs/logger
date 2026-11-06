@@ -88,6 +88,7 @@
     "example": "tsx examples/ts/logger-example.ts",
     "example:http": "tsx examples/ts/http-example.ts",
     "example:fastify": "tsx examples/ts/fastify-example.ts",
+    "example:express": "tsx examples/ts/express-example.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:security": "vitest run test/logger/security.test.ts",
@@ -110,7 +111,7 @@
     "structured-logging",
     "redaction"
   ],
-  "author": "mayank",
+  "author": "oneunitjs",
   "license": "MIT",
   "sideEffects": false,
   "engines": {
