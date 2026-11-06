@@ -19,20 +19,20 @@ describe("createTransportInstance: lifecycle", () => {
         expect(transport.write).toBeDefined();
     });
 
-    it("flush resolves immediately for transports without flush", () => {
+    it("flush resolves immediately for transports without flush", async () => {
         const transport = createTransportInstance({
             target: "pretty",
         });
 
-        expect(transport.flush()).resolves.toBeUndefined();
+        await expect(transport.flush()).resolves.toBeUndefined();
     });
 
-    it("close resolves immediately for transports without end", () => {
+    it("close resolves immediately for transports without end", async () => {
         const transport = createTransportInstance({
             target: "pretty",
         });
 
-        expect(transport.close()).resolves.toBeUndefined();
+        await expect(transport.close()).resolves.toBeUndefined();
     });
 });
 

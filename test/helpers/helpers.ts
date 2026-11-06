@@ -27,9 +27,6 @@ export interface Captured {
     lines: string[];
 }
 
-import { createLogger } from "../../src/logger/logger.js";
-import type { LoggerOptions } from "../../src/types.js";
-
 /**
  * A writable stream that collects and parses everything written to it.
  */
