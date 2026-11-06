@@ -1,5 +1,5 @@
 import express from "express";
-import { createLogger, createHttpLogger } from "../../dist/index.js";
+import { createLogger, createHttpLogger } from "../../src/index.js";
 
 const logger = createLogger({ mode: "development" });
 const httpLogger = createHttpLogger({
