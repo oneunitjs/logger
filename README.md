@@ -2,8 +2,9 @@
 
 High-performance, secure-by-default structured logging built on [Pino](https://getpino.io). Engineered for microservices, HTTP APIs, and enterprise applications with deep automatic redaction, URL sanitization, transport lifecycle management, and zero-allocation copy-on-write paths.
 
-[![CI](https://github.com/mayank040902/oneunit/actions/workflows/ci.yml/badge.svg)](https://github.com/mayank040902/oneunit/actions/workflows/ci.yml)
-[![Security](https://github.com/mayank040902/oneunit/actions/workflows/security.yml/badge.svg)](https://github.com/mayank040902/oneunit/actions/workflows/security.yml)
+[![GitHub](https://img.shields.io/badge/GitHub-oneunitjs%2Flogger-181717?logo=github)](https://github.com/oneunitjs/logger)
+[![CI](https://github.com/oneunitjs/logger/actions/workflows/ci.yml/badge.svg)](https://github.com/oneunitjs/logger/actions/workflows/ci.yml)
+[![Security](https://github.com/oneunitjs/logger/actions/workflows/security.yml/badge.svg)](https://github.com/oneunitjs/logger/actions/workflows/security.yml)
 [![npm version](https://img.shields.io/npm/v/@oneunit/logger.svg?color=blue)](https://www.npmjs.com/package/@oneunit/logger)
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D20-brightgreen.svg)](https://nodejs.org)
 [![TypeScript](https://img.shields.io/badge/typescript-5.x-blue.svg)](https://www.typescriptlang.org)
@@ -121,7 +122,7 @@ JSON.stringify  ──►  destination stream
 2. **Errors are preserved**: The walker preserves error prototypes, non-enumerable properties (`message`), and accessors (`stack`) so that errors pass Pino's internal `instanceof Error` checks without loss of diagnostic context.
 3. **`redact.paths` covers post-serialization headers**: Fields that only exist after serialization (such as `res.headers`) are masked by fast-redact paths.
 
-For full architectural deep-dives, see [ARCHITECTURE.md](./ARCHITECTURE.md).
+For full architectural deep-dives, see [ARCHITECTURE.md](./docs/ARCHITECTURE.md).
 
 ---
 
@@ -825,4 +826,4 @@ All 21 functions are directly available from the root package `@oneunit/logger`:
 
 ## License
 
-MIT © 2026 mayank
+MIT © 2026 OneUnit (oneunitjs)
