@@ -8,6 +8,9 @@ on:
     schedule:
         - cron: "0 6 * * 1"
 
+permissions:
+    contents: read
+
 env:
     NODE_VERSION: "20"
 
@@ -16,9 +19,6 @@ jobs:
         name: Dependency Audit
         runs-on: ubuntu-latest
         timeout-minutes: 10
-        strategy:
-            matrix:
-                node: ["lts/*", "20", "22", "24"]
         steps:
             - name: Checkout repository
               uses: actions/checkout@v4
@@ -26,7 +26,7 @@ jobs:
             - name: Setup Node.js
               uses: actions/setup-node@v4
               with:
-                  node-version: ${{ matrix.node }}
+                  node-version: ${{ env.NODE_VERSION }}
                   cache: "npm"
 
             - name: Install dependencies
@@ -36,12 +36,12 @@ jobs:
               run: npm audit --audit-level=high
 
     security-tests:
-        name: Security Test Suite
+        name: Security Test Suite (Node ${{ matrix.node }})
         runs-on: ubuntu-latest
         timeout-minutes: 15
         strategy:
             matrix:
-                node: ["lts/*", "20", "22", "24"]
+                node: ["20", "22", "24"]
         steps:
             - name: Checkout repository
               uses: actions/checkout@v4
@@ -68,9 +68,12 @@ jobs:
         steps:
             - name: Checkout repository
               uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
 
             - name: Scan for secrets
               uses: trufflesecurity/trufflehog@v3
               with:
                   path: ./
                   only_verified: false
+                  extra_args: --exclude-paths=.trufflehogignore

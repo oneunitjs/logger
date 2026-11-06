@@ -6,14 +6,84 @@ on:
             - "logger-v*"
             - "v*"
 
+permissions:
+    contents: read
+    id-token: write
+
 env:
     NODE_VERSION: "20"
 
 jobs:
+    verify:
+        name: Pre-publish Verification (Node ${{ matrix.node }})
+        runs-on: ubuntu-latest
+        timeout-minutes: 15
+        strategy:
+            matrix:
+                node: ["20", "22", "24"]
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ matrix.node }}
+                  cache: "npm"
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Verify version parity
+              if: matrix.node == '20'
+              run: |
+                  RAW_TAG="${GITHUB_REF_NAME}"
+                  TAG_VERSION="${RAW_TAG#logger-v}"
+                  TAG_VERSION="${TAG_VERSION#v}"
+                  PKG_VERSION=$(node -p "require('./package.json').version")
+
+                  echo "Git tag version: $TAG_VERSION"
+                  echo "package.json version: $PKG_VERSION"
+
+                  if [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
+                      echo "Error: Tag version ($TAG_VERSION) does not match package.json version ($PKG_VERSION)"
+                      exit 1
+                  fi
+
+            - name: Typecheck
+              run: |
+                  npm run typecheck:src
+                  npm run typecheck
+                  npm run typecheck:examples
+
+            - name: Build package
+              run: npm run build
+
+            - name: Run test suite
+              run: npm test
+
+            - name: Verify package contents
+              run: npm run pack:check
+
+            - name: Verify clean tarball installation
+              if: matrix.node == '20'
+              run: |
+                  TARBALL=$(npm pack)
+                  mkdir -p /tmp/tarball-publish-test
+                  cd /tmp/tarball-publish-test
+                  npm init -y --type=module
+                  npm install "$GITHUB_WORKSPACE/$TARBALL"
+                  node -e '
+                  import * as root from "@oneunit/logger";
+                  if (typeof root.createLogger !== "function") throw new Error("Tarball verification failed");
+                  console.log("Pre-publish tarball verified.");
+                  '
+
     publish:
         name: Publish to npm
         runs-on: ubuntu-latest
         timeout-minutes: 15
+        needs: verify
         steps:
             - name: Checkout repository
               uses: actions/checkout@v4
@@ -28,19 +98,10 @@ jobs:
             - name: Install dependencies
               run: npm ci
 
-            - name: Typecheck
-              run: npm run typecheck:src
-
             - name: Build package
               run: npm run build
 
-            - name: Run test suite
-              run: npm test
-
-            - name: Verify package contents
-              run: npm run pack:check
-
             - name: Publish to npm
-              run: npm publish
+              run: npm publish --access public --provenance
               env:
                   NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

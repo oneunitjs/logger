@@ -4,33 +4,32 @@ on:
     issues:
         types: [opened, reopened, labeled]
 
+permissions:
+    issues: write
+
 jobs:
     triage:
         name: Triage Bug Report
         runs-on: ubuntu-latest
         timeout-minutes: 5
         if: |
-            github.event.issue.labels.*.name == 'bug' ||
-            contains(github.event.issue.labels.*.name, 'bug')
+            contains(github.event.issue.labels.*.name, 'bug') &&
+            !contains(github.event.issue.labels.*.name, 'triage')
         steps:
-            - name: Add triage label
+            - name: Triage and acknowledge bug report
               uses: actions/github-script@v7
               with:
                   script: |
-                      github.rest.issues.addLabels({
+                      await github.rest.issues.addLabels({
                           issue_number: context.issue.number,
                           owner: context.repo.owner,
                           repo: context.repo.repo,
                           labels: ["triage"]
-                      })
+                      });
 
-            - name: Comment on issue
-              uses: actions/github-script@v7
-              with:
-                  script: |
-                      github.rest.issues.createComment({
+                      await github.rest.issues.createComment({
                           issue_number: context.issue.number,
                           owner: context.repo.owner,
                           repo: context.repo.repo,
-                          body: "Thank you for the bug report! A maintainer will triage this issue shortly. Please provide a minimal reproduction if possible."
-                      })
+                          body: "Thank you for reporting this issue! A maintainer will triage this shortly. If you haven't already, please provide a minimal reproduction or relevant configuration snippets."
+                      });

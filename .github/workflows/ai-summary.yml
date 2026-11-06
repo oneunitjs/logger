@@ -6,6 +6,9 @@ on:
     pull_request:
         branches: [main, master]
 
+permissions:
+    contents: read
+
 jobs:
     summarize:
         name: Generate AI Summary
@@ -14,15 +17,23 @@ jobs:
         steps:
             - name: Checkout repository
               uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
 
             - name: Gather changed files
               id: changed-files
               run: |
+                  echo "files<<EOF" >> "$GITHUB_OUTPUT"
                   if [ "${{ github.event_name }}" = "pull_request" ]; then
-                      echo "files=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})" >> $GITHUB_OUTPUT
+                      git diff --name-only "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}" >> "$GITHUB_OUTPUT" || true
                   else
-                      echo "files=$(git diff --name-only HEAD~1 HEAD)" >> $GITHUB_OUTPUT
+                      if git rev-parse --verify HEAD~1 >/dev/null 2>&1; then
+                          git diff --name-only HEAD~1 HEAD >> "$GITHUB_OUTPUT" || true
+                      else
+                          git ls-files >> "$GITHUB_OUTPUT" || true
+                      fi
                   fi
+                  echo "EOF" >> "$GITHUB_OUTPUT"
 
             - name: Report summary
               run: |

@@ -6,6 +6,9 @@ on:
     pull_request:
         branches: [main, master]
 
+permissions:
+    contents: read
+
 env:
     NODE_VERSION: "20"
 
@@ -30,6 +33,12 @@ jobs:
             - name: Typecheck source
               run: npm run typecheck:src
 
+            - name: Typecheck tests
+              run: npm run typecheck
+
+            - name: Typecheck examples
+              run: npm run typecheck:examples
+
     build:
         name: Build
         runs-on: ubuntu-latest
@@ -51,19 +60,25 @@ jobs:
             - name: Build package
               run: npm run build
 
-            - name: Verify dist output exists
+            - name: Verify dist output and subpath exports exist
               run: |
-                  test -f dist/index.js
-                  test -f dist/index.d.ts
+                  test -f dist/index.js && test -f dist/index.d.ts
+                  test -f dist/logger/config.js && test -f dist/logger/config.d.ts
+                  test -f dist/http/middleware.js && test -f dist/http/middleware.d.ts
+                  test -f dist/logger/logger.js && test -f dist/logger/logger.d.ts
+                  test -f dist/http/serializers.js && test -f dist/http/serializers.d.ts
+                  test -f dist/transport/transport.js && test -f dist/transport/transport.d.ts
+                  test -f dist/config-validation.js && test -f dist/config-validation.d.ts
+                  test -f dist/presets.js && test -f dist/presets.d.ts
 
     test:
-        name: Test
+        name: Test (Node ${{ matrix.node }})
         runs-on: ubuntu-latest
         timeout-minutes: 15
         needs: lint-and-typecheck
         strategy:
             matrix:
-                node: ["lts/*", "20", "22", "24"]
+                node: ["20", "22", "24"]
         steps:
             - name: Checkout repository
               uses: actions/checkout@v4
@@ -84,7 +99,7 @@ jobs:
               run: npm test
 
     pack-check:
-        name: Pack Check
+        name: Pack Check & Subpath Verification
         runs-on: ubuntu-latest
         timeout-minutes: 10
         needs: [build, test]
@@ -107,6 +122,35 @@ jobs:
             - name: Verify package contents
               run: npm run pack:check
 
+            - name: Verify clean tarball installation and subpath imports
+              run: |
+                  TARBALL=$(npm pack)
+                  mkdir -p /tmp/tarball-test
+                  cd /tmp/tarball-test
+                  npm init -y --type=module
+                  npm install "$GITHUB_WORKSPACE/$TARBALL"
+                  node -e '
+                  import * as root from "@oneunit/logger";
+                  import * as config from "@oneunit/logger/config";
+                  import * as validation from "@oneunit/logger/config-validation";
+                  import * as http from "@oneunit/logger/http";
+                  import * as serialize from "@oneunit/logger/serialize";
+                  import * as logger from "@oneunit/logger/logger";
+                  import * as presets from "@oneunit/logger/presets";
+                  import * as transport from "@oneunit/logger/transport";
+
+                  if (typeof root.createLogger !== "function") throw new Error("Missing createLogger in root export");
+                  if (typeof config.defineConfig !== "function") throw new Error("Missing defineConfig in /config export");
+                  if (typeof validation.validateConfig !== "function") throw new Error("Missing validateConfig in /config-validation export");
+                  if (typeof http.createHttpLogger !== "function") throw new Error("Missing createHttpLogger in /http export");
+                  if (typeof serialize.createSerializers !== "function") throw new Error("Missing createSerializers in /serialize export");
+                  if (typeof logger.createLogger !== "function") throw new Error("Missing createLogger in /logger export");
+                  if (typeof presets.presets !== "object") throw new Error("Missing presets in /presets export");
+                  if (typeof transport.createTransport !== "function") throw new Error("Missing createTransport in /transport export");
+
+                  console.log("Tarball subpath imports verified successfully.");
+                  '
+
     ci:
         name: CI Pipeline
         runs-on: ubuntu-latest
@@ -114,4 +158,4 @@ jobs:
         needs: [lint-and-typecheck, build, test, pack-check]
         steps:
             - name: Report CI status
-              run: echo "All CI stages passed"
+              run: echo "All CI stages passed successfully."
