@@ -23,17 +23,20 @@ function cleanupDir(dir: string): void {
     fs.rmSync(dir, { recursive: true, force: true });
 }
 
-/** Polls for a file to exist with non-empty content, up to ~2 seconds. */
+/** Polls for a file to exist with stable, non-empty content, up to ~2 seconds. */
 async function waitForContent(file: string, timeoutMs = 2000): Promise<string> {
     const start = Date.now();
+    let previous = "";
     while (Date.now() - start < timeoutMs) {
+        let content = "";
         if (fs.existsSync(file)) {
-            const content = fs.readFileSync(file, "utf8").trim();
-            if (content) {
-                return content;
-            }
+            content = fs.readFileSync(file, "utf8").trim();
         }
-        await new Promise((resolve) => setTimeout(resolve, 50));
+        if (content && content === previous) {
+            return content;
+        }
+        previous = content;
+        await new Promise((resolve) => setTimeout(resolve, 30));
     }
     throw new Error(`file ${file} never received content`);
 }
