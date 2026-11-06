@@ -8,7 +8,7 @@ Three runtime dependencies: `pino`, `pino-http`, and `pino-std-serializers`. `pi
 
 ## 1. Project Overview and Goals
 
-**What:** A structured logging library for Node.js 20+ that wraps Pino with automatic deep redaction, HTTP request/response serializers, error serialization, transport builders, lifecycle management, and Fastify 5 integration.
+**What:** A structured logging library for Node.js 20+ that wraps Pino with automatic deep redaction, HTTP request/response serializers, error serialization, transport builders, and lifecycle management.
 
 **Why:** Plain Pino does not redact sensitive data by default. Application developers routinely log passwords, tokens, API keys, cookies, and Authorization headers — either directly in payload fields or transitively through `req.url`, `req.headers`, `res.headers`, `Error` metadata, and child logger bindings. `@oneunit/logger` makes redaction the default so secrets never reach a log sink without explicit opt-out.
 
@@ -51,7 +51,7 @@ JSON.stringify -> destination stream
 
 Three consequences follow, and each one is load-bearing:
 
-1. **The walker sees framework-parsed `query` before the serializer copies it.** A Fastify request has its own `query` property, so `redactLogObject` masks `query.token` before `createSerializers` moves that object into the emitted line. A raw `IncomingMessage` has no `query` property at all, and `pino-std-serializers` v7 does not parse one out of the URL, so nothing is emitted for it. Neither path can leak a query secret.
+1. **The walker sees parsed query before the serializer copies it.** The walker masks sensitive keys in query-like objects before `createSerializers` moves that object into the emitted line. A raw `IncomingMessage` has no `query` property at all, and `pino-std-serializers` v7 does not parse one out of the URL, so nothing is emitted for it. Neither path can leak a query secret.
 
 2. **The walker runs before the `err` serializer, so it must not destroy the `Error`.** An earlier version copied only own enumerable keys. `message` is non-enumerable and V8 implements `stack` as an own accessor over internal `[[ErrorData]]`, so both were dropped; the flattened value then failed the std serializer's `instanceof Error` check and the line lost its message and stack entirely. `safeShallowCopyPreserving` keeps the prototype and non-enumerable properties and materializes accessors into data properties.
 
@@ -267,7 +267,7 @@ JSON.stringify  → destination
 
 ### Why `formatters.log` runs before serializers
 
-Framework-parsed query objects (e.g. Fastify's `request.query`) are own enumerable properties on the request. The walker sees them first and masks `query.token` before `createSerializers` copies `query` into the emitted line. If redaction ran after serializers, the serializer's output could still contain secrets that `redact.paths` does not cover.
+Framework-parsed query objects are own enumerable properties on the request. The walker sees them first and masks `query.token` before `createSerializers` copies `query` into the emitted line. If redaction ran after serializers, the serializer's output could still contain secrets that `redact.paths` does not cover.
 
 ### Why `redact.paths` is still needed
 
@@ -571,43 +571,6 @@ Signal-handler tests run in isolated contexts to avoid terminating the main test
 
 ---
 
-## 16. Fastify 5 Integration
-
-### Correct integration: `loggerInstance`
-
-```typescript
-import Fastify from "fastify";
-import { createLogger } from "@oneunit/logger";
-
-const logger = createLogger({ mode: "production" });
-const app = Fastify({ loggerInstance: logger });
-```
-
-Fastify 5 accepts `loggerInstance` as a Pino logger instance. The package's serializers, redaction, level formatting, and destination are all used. Output goes to the configured destination, not stdout.
-
-### Incorrect integration: `logger`
-
-```typescript
-// ANTI-PATTERN — do not use
-const app = Fastify({ logger: createLogger({ mode: "production" }) });
-// or
-const app = Fastify({ logger: pinoHttpMiddleware });
-```
-
-In Fastify 5, `logger` accepts `boolean | options`. Handing it a logger instance or middleware makes Fastify build its **own** Pino logger. Nothing throws — the server starts and serves — but:
-- The package's serializers are absent.
-- The package's redaction is absent.
-- The package's level formatting is absent.
-- Output goes to stdout instead of the configured destination.
-
-The test suite asserts both the working path (`loggerInstance`) and the anti-pattern's failure (`logger`), so the README guidance cannot silently become wrong.
-
-### Fastify internal diagnostics
-
-Fastify 5 logs its own internal diagnostic lines (e.g. `Route GET:/path?token=... not found`) that echo the raw request URL including query strings. This is Fastify's behavior, outside the package's serializer/redaction control. The package's own `req.url` output is correctly stripped. Package-produced output never contains secrets from the package's logging paths.
-
----
-
 ## 17. Audit Logging and Security Considerations
 
 ### Audit events
@@ -642,7 +605,7 @@ The secret value is never included. Audit sink write failures are swallowed.
 
 **What is NOT protected (documented limitations):**
 - Properties on non-plain object bindings (class instances, model instances, sockets, streams). These are opaque leaves.
-- Fastify's internal diagnostic log lines (outside package control).
+- Internal framework diagnostic log lines (outside package control).
 - Secrets in `console.log`, `process.stdout.write`, or other non-Pino output.
 
 ---
@@ -713,10 +676,10 @@ test/
   http/
     serializers.test.ts         Request, response, and error serializers
     error.test.ts               Cause chains, AggregateError, cycles, metadata
-    integration.test.ts         Real Fastify server (loggerInstance + anti-pattern)
+    integration.test.ts         Real HTTP server and serializers
     concurrent.test.ts          Concurrent requests, HTTP error handling
     header-policy.test.ts       Header allowlist, auth normalization, query exclusion
-    express.test.ts             Express middleware integration
+    http/integration.test.ts         HTTP server integration
   transport/
     transport.test.ts           Transport target definitions
     lifecycle.test.ts           Flush, close, graceful shutdown, multi-transport
@@ -739,7 +702,7 @@ test/
 ```bash
 npm test              # Full suite
 npm run test:security # Security suite only
-npm run test:integration # Fastify and pino-http integration
+npm run test:integration # HTTP server and pino-http integration
 npm run test:serializers # Serializer tests
 npm run test:api        # Public API surface
 npm run test:perf       # Performance regressions
@@ -811,7 +774,7 @@ CI preset: level `silent`, audit enabled (`warn`), strict header allowlisting (`
 
 2. **In-memory Writable streams through `pino.transport()` throw `DataCloneError`.** Use `pino(stream)` directly or a file-path destination instead.
 
-3. **Fastify internal diagnostic log lines** (e.g. route-not-found messages with raw URLs) are outside the package's redaction pipeline. Package-produced output is clean.
+3. **Internal framework diagnostic log lines** (e.g. route-not-found messages echoing raw URLs) are outside the package's redaction pipeline. Package-produced output is clean.
 
 4. **`maxDepth` default is 100.** Objects nested deeper than 100 are not traversed beyond the boundary. This prevents stack overflow on pathological payloads.
 

@@ -18,7 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `CONTRIBUTING.md` covering security disclosure, the checks a change must pass, and the behaviors that look like bugs but are deliberate.
 - Security suite (`test:security`, 72 tests) covering redaction by key position, casing, `toJSON` routes, errors, child bindings, hostile payloads, circular references, mutation, and the eight security invariants.
 - Performance suite (`test:perf`) asserting cost *shape* rather than absolute throughput, including a deterministic identity guard against object-graph traversal.
-- Serializer, Fastify integration, and public API suites (`test:serializers`, `test:integration`, `test:api`).
+- Serializer, HTTP integration, and public API suites (`test:serializers`, `test:integration`, `test:api`).
 - `tsconfig.test.json` so `npm run typecheck` covers the test suite, which was previously unchecked.
 - `createLogger` accepts a `destination` option.
 
@@ -54,7 +54,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Documentation
 
 - Documented that class/model instances bound as values are **not** recursively redacted. This is a deliberate trade to avoid per-call graph traversal, and it is asserted in the test suite so a future change has to revisit it.
-- Fastify integration must use `loggerInstance`; passing the logger as `logger` makes Fastify build its own logger and bypasses this package.
 
 ### Testing (QA coverage added)
 
@@ -70,7 +69,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Known limitations (documented, not fixed)
 
 - **In-memory Writable streams through `pino.transport()` throw `DataCloneError`.** `pino.transport()` runs in a worker thread that cannot clone a `Writable` stream. Workarounds: pass the stream directly to `pino(stream)`, or use a file-path destination.
-- **Fastify internal diagnostic log lines** (e.g. route-not-found messages echoing raw request URLs) are outside the package's redaction pipeline. Package-produced output is clean.
+- **Framework internal diagnostic log lines** (e.g. route-not-found messages echoing raw request URLs) are outside the package's redaction pipeline. Package-produced output is clean.
 - **Non-plain object bindings are not deep-walked.** Class instances, model instances, sockets, and streams bound as values are treated as opaque leaves. Properties on them are not masked.
 - **`npm run typecheck` references a missing `tsconfig.test.json`.** Use `npm run typecheck:src` instead. Pre-existing project gap; does not affect runtime.
 
